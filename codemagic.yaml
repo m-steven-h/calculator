@@ -1,47 +1,38 @@
 workflows:
-  android-release:
-    name: Android Release Build
-    max_build_duration: 60
-
+  flutter-apk-workflow:
+    name: Flutter APK Builder
     environment:
       flutter: stable
-      java: 17
-
+      xcode: latest
+      cocoapods: default
+      node: latest
+    cache:
+      cache_paths:
+        - ~/.pub-cache
+        - ~/.gradle/caches/
+        - ~/.gradle/wrapper/
     scripts:
-      # 🧹 تنظيف شامل
-      - name: Clean project
+      - name: تنظيف المشروع
         script: |
           flutter clean
-          rm -rf .dart_tool
-          rm -rf pubspec.lock
-
-      # 📦 تحميل dependencies
-      - name: Get packages
+      - name: تثبيت التبعيات
         script: |
           flutter pub get
-
-      # 🔥 إصلاح local.properties (مهم جدًا لحل NDK issues)
-      - name: Fix Android properties
+      - name: إنشاء ملفات التوليد (إذا كان المشروع يستخدم build_runner)
         script: |
-          rm -rf android/local.properties
-          echo "flutter.sdk=/usr/local/flutter" > android/local.properties
-          echo "sdk.dir=/usr/local/android-sdk" >> android/local.properties
-
-      # ⚠️ تعطيل lint crash (حل مشكلة RescheduleReceiver)
-      - name: Fix lint issues
-        script: |
-          echo "android.lint.checkReleaseBuilds=false" >> android/gradle.properties
-          echo "android.lint.abortOnError=false" >> android/gradle.properties
-
-      # ⚙️ Build APK
-      - name: Build APK
+          flutter pub run build_runner build --delete-conflicting-outputs
+      - name: إنشاء APK للإصدار
         script: |
           flutter build apk --release
-
+      - name: إنشاء APK للإصدار (split per ABI)
+        script: |
+          flutter build apk --release --split-per-abi
     artifacts:
-      - build/app/outputs/flutter-apk/app-release.apk
-
+      - build/app/outputs/flutter-apk/*.apk
     publishing:
       email:
         recipients:
           - your-email@example.com
+        notify:
+          success: true
+          failure: true
