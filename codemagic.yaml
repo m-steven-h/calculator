@@ -1,5 +1,24 @@
-flutter clean
-flutter pub get
-flutter build apk --release --split-per-abi
+workflows:
+    scripts:
+      - name: Clean project
+        script: |
+          flutter clean
 
-echo Build Done
+      # 📦 تحميل dependencies
+      - name: Get packages
+        script: |
+          flutter pub get
+
+
+      # ⚙️ Build APK
+      - name: Build APK
+        script: |
+          flutter build apk --release
+
+    artifacts:
+      - build/app/outputs/flutter-apk/app-release.apk
+
+    publishing:
+      email:
+        recipients:
+          - your-email@example.com
